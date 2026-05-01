@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager</title>
+<style>
+  :root {
+    --bg: #f5f5f5;
+    --card: #fff;
+    --text: #222;
+    --muted: #888;
+    --border: #ddd;
+    --accent: #2563eb;
+    --high: #dc2626;
+    --med: #d97706;
+    --low: #16a34a;
+  }
+  [data-theme="dark"] {
+    --bg: #1a1a1a;
+    --card: #262626;
+    --text: #eee;
+    --muted: #999;
+    --border: #3a3a3a;
+    --accent: #60a5fa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .container { max-width: 800px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  h1 { font-size: 28px; }
+
+  .theme-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  form { display: grid; gap: 12px; }
+
+  input, textarea, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  button {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  button:hover { opacity: 0.9; }
+
+  button.cancel {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .form-actions { display: flex; gap: 8px; }
+
+  .error { color: var(--high); font-size: 13px; min-height: 16px; }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar input, .toolbar select { flex: 1; min-width: 140px; }
+
+  .filters {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+  }
+
+  .filter-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .task {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: var(--card);
+  }
+
+  .task.done { opacity: 0.55; }
+  .task.done .title { text-decoration: line-through; }
+
+  .task input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .task-content { flex: 1; min-width: 0; }
+
+  .task-meta {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .badge.high { background: var(--high); color: #fff; }
+  .badge.medium { background: var(--med); color: #fff; }
+  .badge.low { background: var(--low); color: #fff; }
+  .badge.cat {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .title { font-weight: 600; font-size: 15px; word-break: break-word; }
+
+  .desc {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+    word-break: break-word;
+  }
+
+  .task-actions { display: flex; gap: 4px; align-self: start; }
+
+  .icon-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .icon-btn:hover { color: var(--text); }
+  .icon-btn.danger:hover { color: var(--high); }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 40px 20px;
+    font-size: 14px;
+  }
+
+  .stats { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+  .toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+  }
+
+  .toast {
+    background: var(--text);
+    color: var(--bg);
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slide-in 0.2s ease;
+    max-width: 300px;
+  }
+
+  .toast.exit { animation: slide-out 0.2s ease forwards; }
+
+  @keyframes slide-in {
+    from { transform: translateX(110%); }
+    to { transform: translateX(0); }
+  }
+
+  @keyframes slide-out {
+    from { transform: translateX(0); }
+    to { transform: translateX(110%); }
+  }
+
+  @media (max-width: 600px) {
+    .row { grid-template-columns: 1fr; }
+    .toast-container { top: 10px; right: 10px; left: 10px; }
+    .toast { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Task Manager</h1>
+    <button class="theme-btn" id="themeBtn">Dark</button>
+  </header>
+
+  <div class="card">
+    <form id="taskForm">
+      <div>
+        <input type="text" id="title" placeholder="Task title" maxlength="100">
+        <div class="error" id="titleError"></div>
+      </div>
+      <textarea id="description" placeholder="Description (optional)" maxlength="300"></textarea>
+      <div class="row">
+        <select id="category">
+          <option value="Personal">Personal</option>
+          <option value="Work">Work</option>
+          <option value="Urgent">Urgent</option>
+        </select>
+        <select id="priority">
+          <option value="low">Low priority</option>
+          <option value="medium" selected>Medium priority</option>
+          <option value="high">High priority</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="submit" id="submitBtn">Add Task</button>
+        <button type="button" class="cancel" id="cancelBtn" style="display:none;">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search tasks...">
+    <select id="sort">
+      <option value="newest">Newest first</option>
+      <option value="priority">By priority</option>
+      <option value="title">A-Z</option>
+    </select>
+  </div>
+
+  <div class="filters" id="filters"></div>
+  <div class="stats" id="stats"></div>
+  <div id="tasks"></div>
+
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
